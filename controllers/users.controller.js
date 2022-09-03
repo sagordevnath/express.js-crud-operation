@@ -53,3 +53,74 @@ controller.getAllUsers = (req, res, next) => {
       }
     });
   };
+
+  controller.postUser = (req, res, next) => {
+    if (typeof req.body === "object" && Array.isArray(req.body) === false) {
+      const { gender, name, contact, address, photoURL } = req.body;
+  
+      const userGender =
+        typeof gender === "string" &&
+        gender.trim().length > 0 &&
+        (gender.toLocaleLowerCase() === "male" ||
+          gender.toLocaleLowerCase() === "female" ||
+          gender.toLocaleLowerCase() === "other")
+          ? gender
+          : false;
+  
+      const userName =
+        typeof name === "string" && name.trim().length > 0 ? name : false;
+  
+      const userContact =
+        typeof contact === "number" && contact.toString().trim().length === 11
+          ? contact
+          : false;
+  
+      const userAddress =
+        typeof address === "string" && address.trim().length > 0
+          ? address
+          : false;
+  
+      const userPhotoURL =
+        typeof photoURL === "string" && photoURL.trim().length > 0
+          ? photoURL
+          : false;
+      if (userGender && userName && userContact && userAddress && userPhotoURL) {
+        let userObject = {
+          _id: generateID(5),
+          name: userName,
+          gender:
+            userGender.charAt(0).toUpperCase() +
+            userGender.slice(1).toLocaleLowerCase(),
+          contact: userContact,
+          address: userAddress,
+          photoURL: userPhotoURL,
+        };
+        data.create("users", "users", userObject, (err) => {
+          if (!err) {
+            res.status(201).json({
+              success: true,
+              message: "User created successfully",
+              userObject,
+            });
+          } else {
+            res.status(500).json({
+              success: false,
+              message: "Internal server error. User not created",
+              err,
+            });
+          }
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message:
+            "Internal server error. User not created. Missing required fields",
+        });
+      }
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "Invalid request body",
+      });
+    }
+  };
